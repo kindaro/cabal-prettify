@@ -1,8 +1,10 @@
-cabal-version: 2.4
+cabal-version: 3.0
 name: cabal-prettify
 version: 0.1.0.0
 author: Ignat Insarov
 maintainer: kindaro@gmail.com
+tested-with: GHC == 8.10.7, GHC == 9.0.1, GHC == 9.2.1
+extra-source-files: examples/*.cabal
 
 common commons
   build-depends:
@@ -10,7 +12,6 @@ common commons
     , base-unicode-symbols
     , bytestring
     , Cabal
-    , directory
     , filepath
     , optparse-applicative
     , parsec
@@ -27,7 +28,7 @@ common commons
     StandaloneDeriving
     TypeApplications
     UnicodeSyntax
-  ghc-options: -Wall -Wextra
+  ghc-options: -Wall -Wextra -Werror
 
 library
   import: commons
@@ -45,4 +46,4 @@ test-suite checks
   type: exitcode-stdio-1.0
   hs-source-dirs: test-suites/checks
   main-is: Main.hs
-  build-depends: cabal-prettify, tasty, tasty-quickcheck
+  build-depends: cabal-prettify, tasty, tasty-quickcheck, file-embed

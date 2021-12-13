@@ -1,12 +1,12 @@
+{-# language TemplateHaskell #-}
+
 module Main where
 
 import Prelude.Unicode
 
 import Data.ByteString (ByteString)
-import Data.ByteString qualified as ByteString
+import Data.FileEmbed
 import Distribution.PackageDescription.Parsec (parseGenericPackageDescriptionMaybe)
-import System.Directory
-import System.FilePath
 import Test.Tasty
 import Test.Tasty.QuickCheck
 
@@ -14,11 +14,10 @@ import Distribution.Prettify
 
 main ∷ IO ( )
 main = do
-  examples ← getExamples
-  defaultMain (checks examples)
+  defaultMain checks
 
-checks ∷ [(String, ByteString)] → TestTree
-checks examples = testGroup "All checks."
+checks ∷ TestTree
+checks = testGroup "All checks."
   [ testGroup "Sort."
     [ testGroup "Comma separated."
       [ testProperty "Good input is retained" (sortCommaSeparated "x, y" === "x, y")
@@ -42,11 +41,9 @@ checks examples = testGroup "All checks."
     ]
   , testGroup "Parse." [testGroup "Package data is unchanged." (fmap (uncurry checkPackageData) examples)]
   ]
-
-getExamples ∷ IO [(String, ByteString)]
-getExamples = listDirectory "examples" >>= traverse \ nameOfFile → do
-  contentsOfFile ← ByteString.readFile ("examples" </> nameOfFile)
-  return (nameOfFile, contentsOfFile)
+  where
+    examples ∷ [(FilePath, ByteString)]
+    examples = $(makeRelativeToProject "examples" >>= embedDir)
 
 checkPackageData ∷ TestName → ByteString → TestTree
 checkPackageData name contents =
