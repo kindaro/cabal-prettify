@@ -46,11 +46,12 @@ sort = sortFurther ∘ List.sortOn identifyTopLevelEntry
       singleField@(Field name arguments) →
         let repackage reorder = Field name ∘ maybeToList ∘ (fmap ∘ mapFieldLine) reorder ∘ conflateFieldLines
         in case (identifyEnumerable @ComponentField ∘ fieldNameOfName) name of
-            BuildDepends → repackage sortCommaSeparated arguments
+            HsSourceDirs → repackage sortWhiteSpaceSeparated arguments
             ExposedModules → repackage sortWhiteSpaceSeparated arguments
-            HsSourceDirs → repackage sortCommaSeparated arguments
+            BuildDepends → repackage sortCommaSeparated arguments
             DefaultExtensions → repackage sortWhiteSpaceSeparated arguments
             OtherExtensions → repackage sortWhiteSpaceSeparated arguments
+            GhcOptions → repackage arrangeWhiteSpaceSeparated arguments
             _ → singleField
       Section name arguments fields → Section name arguments (recurse fields)
 
@@ -70,35 +71,28 @@ parseList = fmap (fromRight [ ]) ∘ runParserSimply
 sortCommaSeparated ∷ ByteString → ByteString
 sortCommaSeparated = (fmap adjust ∘ parseList) parseCommaSeparated
   where
-    adjust = arrange ∘ List.sort ∘ fmap (squashWhiteSpace ∘ Utf8.fromString)
-
-    arrange ∷ [ByteString] → ByteString
-    arrange byteStrings
-      | length byteStrings > 5 = (ByteString.intercalate "\n" ∘ fmap (", " <>)) byteStrings
-      | otherwise = ByteString.intercalate ", " byteStrings
+    adjust = arrangeWithComma ∘ List.sortOn (fmap toLower ∘ Utf8.toString) ∘ fmap (squashWhiteSpace ∘ Utf8.fromString)
 
     squashWhiteSpace = ByteString.intercalate " " ∘ fmap Utf8.fromString ∘ parseList parseWhiteSpaceSeparated
 
 parseCommaSeparated ∷ Parsec ByteString ( ) [String]
 parseCommaSeparated = do
   optional (try comma)
-  sepBy1 thing comma
+  sepEndBy1 thing comma
   where
     thing = many1Till anyChar ((void ∘ try ∘ lookAhead) comma <|> try eof)
     comma = many parseWhiteSpace *> parseComma *> many parseWhiteSpace
 
 sortWhiteSpaceSeparated ∷ ByteString → ByteString
-sortWhiteSpaceSeparated = (fmap (arrange ∘ List.sort ∘ fmap Utf8.fromString) ∘ parseList) parseWhiteSpaceSeparated
-  where
-    arrange ∷ [ByteString] → ByteString
-    arrange byteStrings
-      | length byteStrings > 5 = (ByteString.intercalate "\n") byteStrings
-      | otherwise = ByteString.intercalate " " byteStrings
+sortWhiteSpaceSeparated = (fmap (arrangeWithWhiteSpace ∘ List.sortOn (fmap toLower ∘ Utf8.toString) ∘ fmap Utf8.fromString) ∘ parseList) parseWhiteSpaceSeparated
+
+arrangeWhiteSpaceSeparated ∷ ByteString → ByteString
+arrangeWhiteSpaceSeparated = arrangeWithWhiteSpace ∘ fmap Utf8.fromString ∘ parseList parseWhiteSpaceSeparated
 
 parseWhiteSpaceSeparated ∷ Parsec ByteString ( ) [String]
 parseWhiteSpaceSeparated = do
   many parseCommaOrWhiteSpace
-  sepBy1 thing (many1 (parseCommaOrWhiteSpace <|> parseComma))
+  sepEndBy1 thing (many1 (parseCommaOrWhiteSpace <|> parseComma))
   where
     thing = many1Till anyChar ((void ∘ try ∘ lookAhead) (many1 parseCommaOrWhiteSpace) <|> try eof)
     parseCommaOrWhiteSpace = parseComma <|> parseWhiteSpace
@@ -109,6 +103,16 @@ many1Till what untilWhen = liftA2 (:) what (manyTill what untilWhen)
 parseComma, parseWhiteSpace ∷ Parsec ByteString ( ) String
 parseComma = string ","
 parseWhiteSpace = string " " <|> string "\n" <|> string "\t"
+
+arrangeWithWhiteSpace ∷ [ByteString] → ByteString
+arrangeWithWhiteSpace byteStrings
+  | length byteStrings > 5 = ByteString.intercalate "\n" byteStrings
+  | otherwise = ByteString.intercalate " " byteStrings
+
+arrangeWithComma ∷ [ByteString] → ByteString
+arrangeWithComma byteStrings
+  | length byteStrings > 5 = (ByteString.intercalate "\n" ∘ fmap (", " <>)) byteStrings
+  | otherwise = ByteString.intercalate ", " byteStrings
 
 show ∷ [PrettyField anything] → ByteString
 show = (<> "\n") ∘ ByteString.intercalate "\n" ∘ fmap Utf8.fromString ∘ fix \ recurse → flattenBlocks ∘ fmap \ prettyField → case prettyField of
@@ -138,7 +142,7 @@ data TopLevelField
   deriving (Eq, Ord, Read, Show, Enum, Bounded)
 
 data ComponentField
-  = Import | HsSourceDirs | MainIs | ExposedModules | BuildDepends
+  = Import | Type | HsSourceDirs | MainIs | ExposedModules | BuildDepends
   | DefaultLanguage | DefaultExtensions | OtherExtensions | GhcOptions
   | OtherComponentField
   deriving (Eq, Ord, Read, Show, Enum, Bounded)

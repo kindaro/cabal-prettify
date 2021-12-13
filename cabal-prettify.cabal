@@ -6,8 +6,8 @@ maintainer: kindaro@gmail.com
 
 common commons
   default-language: Haskell2010
-  default-extensions: BlockArguments ImportQualifiedPost UnicodeSyntax OverloadedStrings TypeApplications StandaloneDeriving FlexibleInstances FlexibleContexts
-  build-depends: Cabal, bytestring, base, pretty, base-unicode-symbols, parsec, utf8-string
+  default-extensions: BlockArguments ImportQualifiedPost UnicodeSyntax OverloadedStrings TypeApplications StandaloneDeriving FlexibleInstances FlexibleContexts ApplicativeDo
+  build-depends: Cabal, bytestring, base, pretty, base-unicode-symbols, parsec, utf8-string, optparse-applicative, filepath, directory
   ghc-options: -fdefer-typed-holes
 
 executable cabal-prettify
@@ -24,6 +24,6 @@ library
 test-suite checks
   import: commons
   type: exitcode-stdio-1.0
-  hs-source-dirs: test-suites/checks 
+  hs-source-dirs: test-suites/checks
   main-is: Main.hs
-  build-depends: tasty, tasty-quickcheck, cabal-prettify, directory, filepath
+  build-depends: tasty, tasty-quickcheck, cabal-prettify
