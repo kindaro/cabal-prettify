@@ -43,7 +43,7 @@ checks = testGroup "All checks."
   ]
   where
     examples ∷ [(FilePath, ByteString)]
-    examples = $(embedDir "examples")
+    examples = $(makeRelativeToProject "examples" >>= embedDir)
 
 checkPackageData ∷ TestName → ByteString → TestTree
 checkPackageData name contents =
