@@ -11,7 +11,6 @@ common commons
     , base-unicode-symbols
     , bytestring
     , Cabal
-    , directory
     , filepath
     , optparse-applicative
     , parsec
@@ -46,4 +45,4 @@ test-suite checks
   type: exitcode-stdio-1.0
   hs-source-dirs: test-suites/checks
   main-is: Main.hs
-  build-depends: cabal-prettify, tasty, tasty-quickcheck
+  build-depends: cabal-prettify, tasty, tasty-quickcheck, file-embed
