@@ -2,17 +2,15 @@ module Main where
 
 import Prelude.Unicode
 
+import Data.ByteString (ByteString)
+import Data.ByteString qualified as ByteString
+import Distribution.PackageDescription.Parsec (parseGenericPackageDescriptionMaybe)
+import System.Directory
+import System.FilePath
 import Test.Tasty
 import Test.Tasty.QuickCheck
-import System.Directory
-import Data.ByteString qualified as ByteString
-import Data.ByteString (ByteString)
-import Control.Monad
-import Data.Either
-import System.FilePath
 
 import Distribution.Prettify
-import Distribution.PackageDescription.Parsec (parseGenericPackageDescriptionMaybe)
 
 main ∷ IO ( )
 main = do
@@ -50,6 +48,7 @@ getExamples = listDirectory "examples" >>= traverse \ nameOfFile → do
   contentsOfFile ← ByteString.readFile ("examples" </> nameOfFile)
   return (nameOfFile, contentsOfFile)
 
+checkPackageData ∷ TestName → ByteString → TestTree
 checkPackageData name contents =
   let
     expected = parseGenericPackageDescriptionMaybe contents

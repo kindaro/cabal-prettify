@@ -1,20 +1,23 @@
+{-# options_ghc -Wno-orphans #-}
+
 module Main where
+
+import Prelude hiding (read, show, error)
+import Prelude qualified
+import Prelude.Unicode
 
 import Control.Exception
 import Control.Monad
 import Control.Monad.IO.Class
-import Prelude hiding (read, show)
-import Prelude qualified
-import Prelude.Unicode
-import Data.Either
-import Distribution.Prettify
 import Data.ByteString qualified as ByteString
+import Data.ByteString.UTF8 qualified as Utf8
+import Distribution.Simple.Utils qualified as Cabal
+import Distribution.Verbosity qualified as Cabal
 import Options.Applicative
 import System.FilePath
 import Text.Parsec qualified as Parsec
-import Data.ByteString.UTF8 qualified as Utf8
-import Distribution.Verbosity qualified as Cabal
-import Distribution.Simple.Utils qualified as Cabal
+
+import Distribution.Prettify
 
 instance Exception Parsec.ParseError
 

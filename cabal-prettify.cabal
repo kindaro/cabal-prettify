@@ -27,7 +27,7 @@ common commons
     StandaloneDeriving
     TypeApplications
     UnicodeSyntax
-  ghc-options: -fdefer-typed-holes
+  ghc-options: -Wall -Wextra
 
 library
   import: commons

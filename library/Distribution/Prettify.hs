@@ -6,21 +6,19 @@ import Prelude.Unicode
 
 import Control.Applicative (liftA2)
 import Control.Monad
-import Data.Maybe
-import Data.Either
+import Data.ByteString (ByteString)
+import Data.ByteString qualified as ByteString
+import Data.ByteString.UTF8 qualified as Utf8
 import Data.Char
+import Data.Either
+import Data.Function
 import Data.List qualified as List
-import Text.Parsec
+import Data.Maybe
 import Distribution.Fields.Parser
 import Distribution.Fields.Pretty
-import Distribution.Parsec.Position
-import Data.Function
-import Data.ByteString qualified as ByteString
-import Data.ByteString (ByteString)
+import Text.Parsec hiding (string)
+import Text.Parsec qualified as Parsec
 import Text.PrettyPrint qualified as PrettyPrint
-import Data.ByteString.UTF8 qualified as Utf8
-
-deriving instance Show (PrettyField Position)
 
 fieldNameOfName ∷ Name anything → ByteString
 fieldNameOfName (Distribution.Fields.Parser.Name _ fieldName) = fieldName
@@ -61,11 +59,12 @@ identifyTopLevelEntry (Section name _ _) = (Right ∘ identifyEnumerable ∘ fie
 
 identifyInnerEntry ∷ Field anything → Either ComponentField Component
 identifyInnerEntry (Field name _) = (Left ∘ identifyEnumerable ∘ fieldNameOfName) name
-identifyInnerEntry (Section sectionName _ _) = Right OtherComponent
+identifyInnerEntry Section { } = Right OtherComponent
 
 runParserSimply ∷ Parsec ByteString ( ) output → ByteString → Either ParseError output
 runParserSimply parser = runParser parser ( ) ""
 
+parseList ∷ Parsec ByteString ( ) [value] → ByteString → [value]
 parseList = fmap (fromRight [ ]) ∘ runParserSimply
 
 sortCommaSeparated ∷ ByteString → ByteString
@@ -91,7 +90,7 @@ arrangeWhiteSpaceSeparated = arrangeWithWhiteSpace ∘ fmap Utf8.fromString ∘ 
 
 parseWhiteSpaceSeparated ∷ Parsec ByteString ( ) [String]
 parseWhiteSpaceSeparated = do
-  many parseCommaOrWhiteSpace
+  _ ← many parseCommaOrWhiteSpace
   sepEndBy1 thing (many1 (parseCommaOrWhiteSpace <|> parseComma))
   where
     thing = many1Till anyChar ((void ∘ try ∘ lookAhead) (many1 parseCommaOrWhiteSpace) <|> try eof)
@@ -101,8 +100,8 @@ many1Till ∷ Parsec ByteString ( ) value → Parsec ByteString ( ) anything →
 many1Till what untilWhen = liftA2 (:) what (manyTill what untilWhen)
 
 parseComma, parseWhiteSpace ∷ Parsec ByteString ( ) String
-parseComma = string ","
-parseWhiteSpace = string " " <|> string "\n" <|> string "\t"
+parseComma = Parsec.string ","
+parseWhiteSpace = Parsec.string " " <|> Parsec.string "\n" <|> Parsec.string "\t"
 
 arrangeWithWhiteSpace ∷ [ByteString] → ByteString
 arrangeWithWhiteSpace byteStrings
@@ -123,7 +122,7 @@ show = (<> "\n") ∘ ByteString.intercalate "\n" ∘ fmap Utf8.fromString ∘ fi
         in case renderedContentsOfField of
             [ ] → [fieldNameString ++ ":"]
             [string] → [fieldNameString ++ ": " ++ string]
-            strings → (fieldNameString ++ ":"): fmap indent renderedContentsOfField
+            _ → (fieldNameString ++ ":"): fmap indent renderedContentsOfField
   PrettySection _ sectionName arguments fields → Block Margin Margin
     let
       renderedSectionName = (PrettyPrint.text ∘ Utf8.toString) sectionName
