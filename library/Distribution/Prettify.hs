@@ -37,12 +37,22 @@ format ∷ ByteString → Either ParseError ByteString
 format = fmap (show ∘ fromParsecFields ∘ sort) ∘ readFields
 
 sort ∷ [Field anything] → [Field anything]
-sort = sortFurther ∘ List.sortOn identifyTopLevelEntry
+sort = sortFurther ∘ sortTopLevel
   where
-    sortFurther ∷ [Field anything] → [Field anything]
+    repackageWithName name reorder = Field name ∘ maybeToList ∘ (fmap ∘ mapFieldLine) reorder ∘ conflateFieldLines
+
+    sortTopLevel, sortFurther ∷ [Field anything] → [Field anything]
+
+    sortTopLevel = List.sortOn identifyTopLevelEntry ∘ fmap \ prettyField → case prettyField of
+      singleField@(Field name arguments) →
+        case (identifyEnumerable @TopLevelField ∘ fieldNameOfName) name of
+          TestedWith → repackageWithName name sortCommaSeparated arguments
+          _ → singleField
+      section@Section { } → section
+
     sortFurther = fix \ recurse → List.sortOn identifyInnerEntry ∘ fmap \ prettyField → case prettyField of
       singleField@(Field name arguments) →
-        let repackage reorder = Field name ∘ maybeToList ∘ (fmap ∘ mapFieldLine) reorder ∘ conflateFieldLines
+        let repackage reorder = repackageWithName name reorder
         in case (identifyEnumerable @ComponentField ∘ fieldNameOfName) name of
             HsSourceDirs → repackage sortWhiteSpaceSeparated arguments
             ExposedModules → repackage sortWhiteSpaceSeparated arguments
