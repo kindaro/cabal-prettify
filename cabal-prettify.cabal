@@ -5,25 +5,44 @@ author: Ignat Insarov
 maintainer: kindaro@gmail.com
 
 common commons
+  build-depends:
+    , base
+    , base-unicode-symbols
+    , bytestring
+    , Cabal
+    , directory
+    , filepath
+    , optparse-applicative
+    , parsec
+    , pretty
+    , utf8-string
   default-language: Haskell2010
-  default-extensions: BlockArguments ImportQualifiedPost UnicodeSyntax OverloadedStrings TypeApplications StandaloneDeriving FlexibleInstances FlexibleContexts ApplicativeDo
-  build-depends: Cabal, bytestring, base, pretty, base-unicode-symbols, parsec, utf8-string, optparse-applicative, filepath, directory
+  default-extensions:
+    ApplicativeDo
+    BlockArguments
+    FlexibleContexts
+    FlexibleInstances
+    ImportQualifiedPost
+    OverloadedStrings
+    StandaloneDeriving
+    TypeApplications
+    UnicodeSyntax
   ghc-options: -fdefer-typed-holes
-
-executable cabal-prettify
-  import: commons
-  main-is: Main.hs
-  hs-source-dirs: executables/cabal-prettify
-  build-depends: cabal-prettify
 
 library
   import: commons
   hs-source-dirs: library
   exposed-modules: Distribution.Prettify
 
+executable cabal-prettify
+  import: commons
+  hs-source-dirs: executables/cabal-prettify
+  main-is: Main.hs
+  build-depends: cabal-prettify
+
 test-suite checks
   import: commons
   type: exitcode-stdio-1.0
   hs-source-dirs: test-suites/checks
   main-is: Main.hs
-  build-depends: tasty, tasty-quickcheck, cabal-prettify
+  build-depends: cabal-prettify, tasty, tasty-quickcheck
