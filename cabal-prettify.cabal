@@ -26,4 +26,4 @@ test-suite checks
   type: exitcode-stdio-1.0
   hs-source-dirs: test-suites/checks 
   main-is: Main.hs
-  build-depends: tasty, tasty-quickcheck, cabal-prettify
+  build-depends: tasty, tasty-quickcheck, cabal-prettify, directory, filepath

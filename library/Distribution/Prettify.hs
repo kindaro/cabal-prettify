@@ -33,7 +33,7 @@ mapFieldLine function (FieldLine annotation byteString) = FieldLine annotation (
 
 conflateFieldLines ∷ [FieldLine anything] → Maybe (FieldLine anything)
 conflateFieldLines [ ] = Nothing
-conflateFieldLines ((FieldLine annotation byteString): remainingFieldLines) = (Just ∘ FieldLine annotation) (byteString <> (ByteString.intercalate " " ∘ fmap byteStringOfFieldLine) remainingFieldLines)
+conflateFieldLines ((FieldLine annotation byteString): remainingFieldLines) = (Just ∘ FieldLine annotation) ((ByteString.intercalate " " ∘ (byteString:) ∘ fmap byteStringOfFieldLine) remainingFieldLines)
 
 format ∷ ByteString → Either ParseError ByteString
 format = fmap (show ∘ fromParsecFields ∘ sort) ∘ readFields
@@ -65,14 +65,21 @@ identifyInnerEntry (Section sectionName _ _) = Right OtherComponent
 runParserSimply ∷ Parsec ByteString ( ) output → ByteString → Either ParseError output
 runParserSimply parser = runParser parser ( ) ""
 
+parseList = fmap (fromRight [ ]) ∘ runParserSimply
+
 sortCommaSeparated ∷ ByteString → ByteString
-sortCommaSeparated = (fmap (arrange ∘ List.sort ∘ fmap Utf8.fromString ∘ fromRight [""]) ∘ runParserSimply) parseCommaSeparated
+sortCommaSeparated = (fmap adjust ∘ parseList) parseCommaSeparated
   where
+    adjust = arrange ∘ List.sort ∘ fmap (squashWhiteSpace ∘ Utf8.fromString)
+
     arrange ∷ [ByteString] → ByteString
     arrange byteStrings
-      | length byteStrings > 5 = (ByteString.intercalate "\n" ∘ fmap (Utf8.fromString ∘ indent ∘ Utf8.toString ∘ (", " <>))) byteStrings
+      | length byteStrings > 5 = (ByteString.intercalate "\n" ∘ fmap (", " <>)) byteStrings
       | otherwise = ByteString.intercalate ", " byteStrings
 
+    squashWhiteSpace = ByteString.intercalate " " ∘ fmap Utf8.fromString ∘ parseList parseWhiteSpaceSeparated
+
+parseCommaSeparated ∷ Parsec ByteString ( ) [String]
 parseCommaSeparated = do
   optional (try comma)
   sepBy1 thing comma
@@ -81,13 +88,14 @@ parseCommaSeparated = do
     comma = many parseWhiteSpace *> parseComma *> many parseWhiteSpace
 
 sortWhiteSpaceSeparated ∷ ByteString → ByteString
-sortWhiteSpaceSeparated = (fmap (arrange ∘ List.sort ∘ fmap Utf8.fromString ∘ fromRight [""]) ∘ runParserSimply) parseWhiteSpaceSeparated
+sortWhiteSpaceSeparated = (fmap (arrange ∘ List.sort ∘ fmap Utf8.fromString) ∘ parseList) parseWhiteSpaceSeparated
   where
     arrange ∷ [ByteString] → ByteString
     arrange byteStrings
-      | length byteStrings > 5 = (ByteString.intercalate "\n" ∘ fmap (Utf8.fromString ∘ indent ∘ Utf8.toString)) byteStrings
+      | length byteStrings > 5 = (ByteString.intercalate "\n") byteStrings
       | otherwise = ByteString.intercalate " " byteStrings
 
+parseWhiteSpaceSeparated ∷ Parsec ByteString ( ) [String]
 parseWhiteSpaceSeparated = do
   many parseCommaOrWhiteSpace
   sepBy1 thing (many1 (parseCommaOrWhiteSpace <|> parseComma))
@@ -111,7 +119,7 @@ show = (<> "\n") ∘ ByteString.intercalate "\n" ∘ fmap Utf8.fromString ∘ fi
         in case renderedContentsOfField of
             [ ] → [fieldNameString ++ ":"]
             [string] → [fieldNameString ++ ": " ++ string]
-            strings → (fieldNameString ++ ":"): renderedContentsOfField
+            strings → (fieldNameString ++ ":"): fmap indent renderedContentsOfField
   PrettySection _ sectionName arguments fields → Block Margin Margin
     let
       renderedSectionName = (PrettyPrint.text ∘ Utf8.toString) sectionName
