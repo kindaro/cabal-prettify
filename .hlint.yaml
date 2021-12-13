@@ -1,0 +1,5 @@
+- ignore: {name: "Use <$>"}
+- ignore: {name: "Use $>"}
+- ignore: {name: "Use section"}
+- ignore: {name: "Use lambda-case"}
+- warn: {name: Redundant bracket due to operator fixities}
