@@ -1,8 +1,9 @@
-cabal-version: 2.4
+cabal-version: 3.0
 name: cabal-prettify
 version: 0.1.0.0
 author: Ignat Insarov
 maintainer: kindaro@gmail.com
+tested-with: GHC == 8.10.7, GHC == 8.6.5, GHC == 8.8.4, GHC == 9.0.1, GHC == 9.2.1
 
 common commons
   build-depends:
@@ -27,7 +28,7 @@ common commons
     StandaloneDeriving
     TypeApplications
     UnicodeSyntax
-  ghc-options: -Wall -Wextra
+  ghc-options: -Wall -Wextra -Werror
 
 library
   import: commons
