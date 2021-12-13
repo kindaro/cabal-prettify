@@ -28,11 +28,6 @@ jobs:
     strategy:
       matrix:
         include:
-          - compiler: ghc-9.2.1
-            compilerKind: ghc
-            compilerVersion: 9.2.1
-            setup-method: ghcup
-            allow-failure: false
           - compiler: ghc-9.0.1
             compilerKind: ghc
             compilerVersion: 9.0.1
@@ -42,16 +37,6 @@ jobs:
             compilerKind: ghc
             compilerVersion: 8.10.7
             setup-method: ghcup
-            allow-failure: false
-          - compiler: ghc-8.8.4
-            compilerKind: ghc
-            compilerVersion: 8.8.4
-            setup-method: hvr-ppa
-            allow-failure: false
-          - compiler: ghc-8.6.5
-            compilerKind: ghc
-            compilerVersion: 8.6.5
-            setup-method: hvr-ppa
             allow-failure: false
       fail-fast: false
     steps:
@@ -161,10 +146,10 @@ jobs:
           cabal-plan --version
       - name: install hlint
         run: |
-          if [ $((HCNUMVER >= 90200)) -ne 0 ] ; then HLINTVER=$(cd /tmp && (${CABAL} v2-install -v $ARG_COMPILER --dry-run hlint  --constraint='hlint >=3.3 && <3.4' |  perl -ne 'if (/\bhlint-(\d+(\.\d+)*)\b/) { print "$1"; last; }')); echo "HLint version $HLINTVER" ; fi
-          if [ $((HCNUMVER >= 90200)) -ne 0 ] ; then if [ ! -e $HOME/.haskell-ci-tools/hlint-$HLINTVER/hlint ]; then echo "Downloading HLint version $HLINTVER"; mkdir -p $HOME/.haskell-ci-tools; curl --write-out 'Status Code: %{http_code} Redirects: %{num_redirects} Total time: %{time_total} Total Dsize: %{size_download}\n' --silent --location --output $HOME/.haskell-ci-tools/hlint-$HLINTVER.tar.gz "https://github.com/ndmitchell/hlint/releases/download/v$HLINTVER/hlint-$HLINTVER-x86_64-linux.tar.gz"; tar -xzv -f $HOME/.haskell-ci-tools/hlint-$HLINTVER.tar.gz -C $HOME/.haskell-ci-tools; fi ; fi
-          if [ $((HCNUMVER >= 90200)) -ne 0 ] ; then mkdir -p $CABAL_DIR/bin && ln -sf "$HOME/.haskell-ci-tools/hlint-$HLINTVER/hlint" $CABAL_DIR/bin/hlint ; fi
-          if [ $((HCNUMVER >= 90200)) -ne 0 ] ; then hlint --version ; fi
+          if [ $((HCNUMVER >= 90000)) -ne 0 ] ; then HLINTVER=$(cd /tmp && (${CABAL} v2-install -v $ARG_COMPILER --dry-run hlint  --constraint='hlint >=3.3 && <3.4' |  perl -ne 'if (/\bhlint-(\d+(\.\d+)*)\b/) { print "$1"; last; }')); echo "HLint version $HLINTVER" ; fi
+          if [ $((HCNUMVER >= 90000)) -ne 0 ] ; then if [ ! -e $HOME/.haskell-ci-tools/hlint-$HLINTVER/hlint ]; then echo "Downloading HLint version $HLINTVER"; mkdir -p $HOME/.haskell-ci-tools; curl --write-out 'Status Code: %{http_code} Redirects: %{num_redirects} Total time: %{time_total} Total Dsize: %{size_download}\n' --silent --location --output $HOME/.haskell-ci-tools/hlint-$HLINTVER.tar.gz "https://github.com/ndmitchell/hlint/releases/download/v$HLINTVER/hlint-$HLINTVER-x86_64-linux.tar.gz"; tar -xzv -f $HOME/.haskell-ci-tools/hlint-$HLINTVER.tar.gz -C $HOME/.haskell-ci-tools; fi ; fi
+          if [ $((HCNUMVER >= 90000)) -ne 0 ] ; then mkdir -p $CABAL_DIR/bin && ln -sf "$HOME/.haskell-ci-tools/hlint-$HLINTVER/hlint" $CABAL_DIR/bin/hlint ; fi
+          if [ $((HCNUMVER >= 90000)) -ne 0 ] ; then hlint --version ; fi
       - name: checkout
         uses: actions/checkout@v2
         with:
@@ -222,8 +207,8 @@ jobs:
           $CABAL v2-test $ARG_COMPILER $ARG_TESTS $ARG_BENCH all --test-show-details=direct
       - name: hlint
         run: |
-          if [ $((HCNUMVER >= 90200)) -ne 0 ] ; then (cd ${PKGDIR_cabal_prettify} && hlint -XApplicativeDo -XBlockArguments -XFlexibleContexts -XFlexibleInstances -XImportQualifiedPost -XOverloadedStrings -XStandaloneDeriving -XTypeApplications -XUnicodeSyntax library) ; fi
-          if [ $((HCNUMVER >= 90200)) -ne 0 ] ; then (cd ${PKGDIR_cabal_prettify} && hlint -XApplicativeDo -XBlockArguments -XFlexibleContexts -XFlexibleInstances -XImportQualifiedPost -XOverloadedStrings -XStandaloneDeriving -XTypeApplications -XUnicodeSyntax executables/cabal-prettify) ; fi
+          if [ $((HCNUMVER >= 90000)) -ne 0 ] ; then (cd ${PKGDIR_cabal_prettify} && hlint -XApplicativeDo -XBlockArguments -XFlexibleContexts -XFlexibleInstances -XImportQualifiedPost -XOverloadedStrings -XStandaloneDeriving -XTypeApplications -XUnicodeSyntax library) ; fi
+          if [ $((HCNUMVER >= 90000)) -ne 0 ] ; then (cd ${PKGDIR_cabal_prettify} && hlint -XApplicativeDo -XBlockArguments -XFlexibleContexts -XFlexibleInstances -XImportQualifiedPost -XOverloadedStrings -XStandaloneDeriving -XTypeApplications -XUnicodeSyntax executables/cabal-prettify) ; fi
       - name: cabal check
         run: |
           cd ${PKGDIR_cabal_prettify} || false
