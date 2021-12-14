@@ -24,16 +24,18 @@ common commons
     FlexibleContexts
     FlexibleInstances
     ImportQualifiedPost
+    InstanceSigs
     OverloadedStrings
     StandaloneDeriving
     TypeApplications
+    TypeOperators
     UnicodeSyntax
   ghc-options: -Wall -Wextra -Werror
 
 library
   import: commons
   hs-source-dirs: library
-  exposed-modules: Distribution.Prettify
+  exposed-modules: Distribution.Prettify Prelude.Fancy
 
 executable cabal-prettify
   import: commons
@@ -46,4 +48,4 @@ test-suite checks
   type: exitcode-stdio-1.0
   hs-source-dirs: test-suites/checks
   main-is: Main.hs
-  build-depends: cabal-prettify, tasty, tasty-quickcheck, file-embed
+  build-depends: cabal-prettify, file-embed, tasty, tasty-quickcheck
