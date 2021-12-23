@@ -1,0 +1,112 @@
+cabal-version: 1.12
+
+-- This file was generated from package.yaml by hpack version 0.31.1.
+-- see: https://github.com/sol/hpack
+-- hash: 50c217e5504795a9a5e4f7076fe411927aff1660b9a3254c11556b640002d529
+
+name:           hode
+version:        0.1.0.0
+description:    Please see the README file
+homepage:       https://github.com/JeffreyBenjaminBrown/hode
+bug-reports:    https://github.com/JeffreyBenjaminBrown/hode/issues
+author:         Jeffrey Benjamin Brown
+maintainer:     jeffbrown.the@gmail.com
+copyright:      2019 Jeffrey Benjamin Brown
+license:        GPL-3
+build-type:     Simple
+
+source-repository head
+  type: git
+  location: https://github.com/JeffreyBenjaminBrown/hode
+
+library
+  exposed-modules:
+                  Hode.Temp
+                , Hode.Brick
+                , Hode.Brick.Wrap
+                , Hode.Brick.Help
+                , Hode.Brick.Help.FakeData
+                , Hode.Brick.Help.Types
+                , Hode.Data.Graph
+                , Hode.Data.Map
+--                , Hode.Data.Relation
+
+                , Hode.Hash.MkHExpr
+                , Hode.Hash.EitherExpr
+                , Hode.Hash.Hash
+                , Hode.Hash.Lookup
+                , Hode.Hash.Lookup.Transitive
+                , Hode.Hash.Parse
+                , Hode.Hash.Parse.Keywords
+                , Hode.Hash.Parse.Util
+                , Hode.Hash.Types
+                , Hode.Hash.Util
+
+                , Hode.NoUI
+                , Hode.NoUI.Internal
+
+                , Hode.PTree
+                , Hode.PTree.Initial
+                , Hode.PTree.Modify
+                , Hode.PTree.Show
+
+                , Hode.Qseq.MkLeaf
+                , Hode.Qseq.Types
+                , Hode.Qseq.Valid
+                , Hode.Qseq.Query
+                , Hode.Qseq.RunLeaf
+                , Hode.Qseq.Subst
+
+                , Hode.Rslt.Edit
+                  -- That re-exports the friendly bits of these:
+                  , Hode.Rslt.Edit.AndSearch
+                  , Hode.Rslt.Edit.Initial
+                  , Hode.Rslt.Edit.Replace
+                  , Hode.Rslt.Edit.Terminal
+
+                , Hode.Rslt.Binary
+                , Hode.Rslt.Files
+                , Hode.Rslt.Index
+                , Hode.Rslt.Lookup
+                , Hode.Rslt.Lookup.Convert
+                , Hode.Rslt.Types
+                , Hode.Rslt.Util
+                , Hode.Rslt.Valid
+                , Hode.Rslt.Show
+                , Hode.Rslt.ShowColor
+                , Hode.Rslt.Show.Util
+                , Hode.Rslt.Sort
+                , Hode.Rslt.Sort.Default
+
+                , Hode.Util.Alternation
+                , Hode.Util.Misc
+                , Hode.Util.Parse
+  other-modules:
+  build-depends:
+                base
+              , bifunctors
+              , brick
+                , vty
+              , containers
+              , deriving-compat
+              , directory
+              , either
+              , filepath
+              , HUnit
+              , lens
+                , microlens
+                , microlens-th
+              , parser-combinators
+                , megaparsec
+              , pointedlist
+              , pretty-simple
+              , process
+              , recursion-schemes <= 5.1.3
+              , text
+                , regex-compat
+              , vector
+              , zippers
+                , text-zipper
+  default-language: Haskell2010
+  ghc-options: -Wall
+  default-extensions: ScopedTypeVariables
