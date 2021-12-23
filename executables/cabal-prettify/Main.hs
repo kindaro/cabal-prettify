@@ -22,7 +22,7 @@ import Distribution.Prettify
 instance Exception Parsec.ParseError
 
 main ∷ IO ( )
-main = join do execParser (info (run <**> helper) (fullDesc <> progDesc "" <> header ""))
+main = join do execParser (info (run <**> helper) (fullDesc <> progDesc "Prettify your Cabal package configuration files!"))
 
 run ∷ Parser ( IO ( ))
 run = formatThisPackage <|> formatStandardInput <|> formatArguments
@@ -30,7 +30,7 @@ run = formatThisPackage <|> formatStandardInput <|> formatArguments
 formatThisPackage, formatArguments, formatStandardInput ∷ Parser (IO ( ))
 
 formatThisPackage = do
-  flag' ( ) (long "this")
+  flag' ( ) (long "this" <> help "Prettify the configuration file of the package you are in right now.")
   pure do
     pathToCabalFile ← Cabal.defaultPackageDesc Cabal.normal
     print pathToCabalFile
@@ -43,7 +43,7 @@ formatArguments = do
       formatFileArchiving target
 
 formatStandardInput = do
-  flag' ( ) (long "filter")
+  flag' ( ) (long "filter" <> help "Prettify standard input.")
   pure do ByteString.interact (either (Utf8.fromString ∘ Prelude.show) id ∘ format)
 
 formatFileArchiving ∷ FilePath → IO ( )
