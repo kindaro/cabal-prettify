@@ -1,0 +1,69 @@
+name:                hgrep
+version:             0.2
+homepage:            https://github.com/thumphries/hgrep
+author:              Tim Humphries
+maintainer:          tim@utf8.me
+bug-reports:         https://github.com/thumphries/hgrep
+license:             BSD3
+license-file:        LICENSE
+category:            Language
+build-type:          Simple
+cabal-version:       >=1.10
+tested-with:         GHC == 8.0.1, GHC == 8.0.2, GHC == 8.2.2
+    , GHC == 8.4.1, GHC == 8.4.2, GHC == 8.4.3, GHC == 8.4.4, GHC == 8.6.1
+    , GHC == 8.6.2, GHC == 8.6.3, GHC == 8.6.4, GHC == 8.6.5
+extra-source-files:
+  README.md
+  CHANGELOG.md
+
+synopsis:
+  Search Haskell source code from the command line
+description:
+  Search Haskell source code from the command line.
+  .
+  Powered by <https://hackage.haskell.org/package/ghc-exactprint ghc-exactprint>.
+
+source-repository head
+  type: git
+  location: git://github.com/thumphries/hgrep.git
+
+executable hgrep
+  default-language:  Haskell2010
+  hs-source-dirs:    main
+  ghc-options:       -Wall -threaded -rtsopts
+  main-is:           hgrep.hs
+  build-depends:
+                     base                           >= 4.9           && < 4.13
+                   , hgrep
+                   , ansi-terminal                  >= 0.6.3         && < 0.10
+                   , directory                      >= 1.2           && < 1.4
+                   , filepath                       >= 1.4           && < 1.5
+                   , optparse-applicative           >= 0.13          && < 0.15
+
+
+library
+  default-language:  Haskell2010
+  hs-source-dirs:    src
+  ghc-options:       -Wall
+  build-depends:
+                     base                           >= 4.9           && < 4.13
+                   , ansi-terminal                  >= 0.6.3         && < 0.10
+                   , bytestring                     >= 0.10.4        && < 0.12
+                   , containers                     >= 0.5.7         && < 0.7
+                   , ghc                            >= 7.10.2        && < 8.7
+                   , ghc-exactprint                 >= 0.5.4.0       && < 0.7
+                   , hscolour                       >= 1.24          && < 1.25
+                   , lens                           >= 4.15          && < 4.18
+                   , pcre-heavy                     >= 1.0           && < 1.1
+                   , template-haskell               >= 2.11          && < 2.15
+
+  exposed-modules:
+                     Language.Haskell.HGrep
+                     Language.Haskell.HGrep.Query
+                     Language.Haskell.HGrep.Prelude
+                     Language.Haskell.HGrep.Print
+
+                     Language.Haskell.HGrep.Internal.Data
+                     Language.Haskell.HGrep.Internal.Lens
+                     Language.Haskell.HGrep.Internal.Lens.Rules
+                     Language.Haskell.HGrep.Internal.Print

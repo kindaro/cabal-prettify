@@ -5,12 +5,14 @@ module Main where
 import Prelude.Unicode
 
 import Data.ByteString (ByteString)
+import Data.Either
 import Data.FileEmbed
 import Distribution.PackageDescription.Parsec (parseGenericPackageDescriptionMaybe)
 import Test.Tasty
 import Test.Tasty.QuickCheck
 
 import Distribution.Prettify
+import Prelude.Fancy
 
 main ∷ IO ( )
 main = do
@@ -39,15 +41,34 @@ checks = testGroup "All checks."
       , testProperty "Long input is tabulated" (sortWhiteSpaceSeparated  "a b c d e f" === "a\nb\nc\nd\ne\nf")
       ]
     ]
-  , testGroup "Parse." [testGroup "Package data is unchanged." (fmap (uncurry checkPackageData) examples)]
+  , testGroup "Parse."
+    [ testGroup "Formatting works." (fmap (uncurry checkFormattingWorks) examples)
+    , testGroup "Formatting is idempotent." (fmap (uncurry checkFormattingIsIdempotent) examples)
+    , testGroup "Package data is unchanged." (fmap (uncurry checkPackageDataIsUnchanged) unchangedExamples)
+    ]
   ]
-  where
-    examples ∷ [(FilePath, ByteString)]
-    examples = $(makeRelativeToProject "examples" >>= embedDir)
 
-checkPackageData ∷ TestName → ByteString → TestTree
-checkPackageData name contents =
+-- | These examples are structurally unchanged by formatting. They may have
+-- white space issues, but everything that should be sorted is already sorted.
+unchangedExamples ∷ [(FilePath, ByteString)]
+unchangedExamples = $(bind embedDir (makeRelativeToProject "examples/unchanged"))
+
+otherExamples ∷ [(FilePath, ByteString)]
+otherExamples = $(bind embedDir (makeRelativeToProject "examples/other"))
+
+examples ∷ [(FilePath, ByteString)]
+examples = unchangedExamples ++ otherExamples
+
+checkFormattingWorks ∷ TestName → ByteString → TestTree
+checkFormattingWorks name contents = testProperty name (isRight (Distribution.Prettify.format contents))
+
+checkFormattingIsIdempotent ∷ TestName → ByteString → TestTree
+checkFormattingIsIdempotent name contents
+  = testProperty name ((bind format ∘ pure) contents === (bind format ∘ bind format ∘ pure) contents)
+
+checkPackageDataIsUnchanged ∷ TestName → ByteString → TestTree
+checkPackageDataIsUnchanged name contents =
   let
     expected = parseGenericPackageDescriptionMaybe contents
-    actual = ((=<<) parseGenericPackageDescriptionMaybe ∘ either (const Nothing) Just ∘ format) contents
-  in testProperty name (expected ≡ actual)
+    actual = (bind parseGenericPackageDescriptionMaybe ∘ either (const Nothing) Just ∘ format) contents
+  in testProperty name (expected === actual)

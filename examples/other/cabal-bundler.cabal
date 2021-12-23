@@ -1,0 +1,109 @@
+cabal-version:      2.2
+name:               cabal-bundler
+version:            0.1
+synopsis:
+  Bundle cabal packages for installation in different environments.
+
+category:           Development
+description:
+  Bundle cabal packages for installation in different environments.
+  Supported variants:
+  .
+  * @nix-single@: A single Nix-derivation
+  * @curl@: Fetch packages with cURL
+
+license:            GPL-3.0-or-later AND BSD-3-Clause
+license-file:       LICENSE
+author:             Oleg Grenrus <oleg.grenrus@iki.fi>
+maintainer:         Oleg Grenrus <oleg.grenrus@iki.fi>
+tested-with:        GHC ==8.6.5 || ==8.8.4 || ==8.10.2
+extra-source-files:
+  Changelog.md
+  data/single.nix
+  fixtures/cabal-fmt.plan.json
+  fixtures/derivation.nix
+  fixtures/fetch-with-curl.sh
+
+source-repository head
+  type:     git
+  location: https://github.com/phadej/cabal-extras
+
+library cabal-bundler-internal
+  default-language:   Haskell2010
+  hs-source-dirs:     src
+  ghc-options:        -Wall
+  exposed-modules:
+    CabalBundler.Curl
+    CabalBundler.ExeOption
+    CabalBundler.Main
+    CabalBundler.NixBase32
+    CabalBundler.NixSingle
+    CabalBundler.NixSingle.Input
+    CabalBundler.NixSingle.Template
+    CabalBundler.OpenBSD
+
+  other-modules:      Paths_cabal_bundler
+  autogen-modules:    Paths_cabal_bundler
+
+  -- ghc-boot dependencies
+  build-depends:
+    , base        ^>=4.12.0.0 || ^>=4.13.0.0 || ^>=4.14.0.0
+    , bytestring  ^>=0.10.8.2
+    , containers  ^>=0.5.10.2 || ^>=0.6.0.1
+    , deepseq     ^>=1.4.3.0
+    , directory   ^>=1.3.0.2
+    , filepath    ^>=1.4.1.2
+    , mtl         ^>=2.2.2
+    , parsec      ^>=3.1.13.0
+    , pretty      ^>=1.1.3.3
+    , process     ^>=1.6.1.0
+    , text        ^>=1.2.3.0
+
+  -- We use Cabal-3.4
+  build-depends:      Cabal ^>=3.4
+
+  -- We also use peura
+  build-depends:      peura
+
+  -- dependencies in library
+  build-depends:
+    , cabal-install-parsers
+    , cabal-plan
+    , optparse-applicative   ^>=0.16.0.0
+    , topograph
+    , vector
+    , zinza                  ^>=0.2
+
+  default-extensions:
+    NoImplicitPrelude
+    OverloadedStrings
+
+executable cabal-bundler
+  default-language: Haskell2010
+  hs-source-dirs:   cli
+  main-is:          Main.hs
+  ghc-options:      -Wall -threaded
+  build-depends:
+    , base
+    , cabal-bundler-internal
+
+test-suite cabal-bundler-tests
+  default-language: Haskell2010
+  type:             exitcode-stdio-1.0
+  ghc-options:      -Wall -threaded
+  hs-source-dirs:   tests
+  main-is:          Tests.hs
+  build-depends:
+    , base
+    , Cabal
+    , cabal-bundler-internal
+    , cabal-install-parsers
+    , cabal-plan
+    , directory
+    , filepath
+    , peura
+
+  -- test dependencies
+  build-depends:
+    , tasty         ^>=1.3.1
+    , tasty-golden  ^>=2.3.4
