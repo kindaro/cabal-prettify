@@ -4,7 +4,7 @@ version: 0.1.0.0
 author: Ignat Insarov
 maintainer: kindaro@gmail.com
 tested-with: GHC == 8.10.7, GHC == 9.0.1, GHC == 9.2.1
-extra-source-files: examples/unchanged/*.cabal examples/other/*.cabal
+extra-source-files: examples/other/*.cabal examples/unchanged/*.cabal
 
 common commons
   build-depends:

@@ -47,6 +47,8 @@ sort = sortFurther ∘ sortTopLevel
       singleField@(Field name arguments) →
         case (identifyEnumerable @TopLevelField ∘ fieldNameOfName) name of
           TestedWith → repackageWithName name sortCommaSeparated arguments
+          ExtraSourceFiles → repackageWithName name sortWhiteSpaceSeparated arguments
+          ExtraDocFiles → repackageWithName name sortWhiteSpaceSeparated arguments
           _ → singleField
       section@Section { } → section
 
@@ -60,6 +62,7 @@ sort = sortFurther ∘ sortTopLevel
             DefaultExtensions → repackage sortWhiteSpaceSeparated arguments
             OtherExtensions → repackage sortWhiteSpaceSeparated arguments
             GhcOptions → repackage arrangeWhiteSpaceSeparated arguments
+            Mixins → repackage sortCommaSeparated arguments
             _ → singleField
       Section name arguments fields → Section name arguments (recurse fields)
 
@@ -146,13 +149,13 @@ indent string = "  " ++ string
 data TopLevelField
   = CabalVersion | Name | Version | Author | Maintainer | Synopsis | Description
   | Category | License | LicenseFile | Stability | Homepage | BugReports
-  | TestedWith | ExtraSourceFiles | BuildType | Copyright
+  | TestedWith | ExtraSourceFiles | ExtraDocFiles | BuildType | Copyright
   | OtherTopLevelField
   deriving (Eq, Ord, Read, Show, Enum, Bounded)
 
 data ComponentField
   = Import | Type | HsSourceDirs | MainIs | ExposedModules | BuildDepends
-  | DefaultLanguage | DefaultExtensions | OtherExtensions | GhcOptions
+  | DefaultLanguage | DefaultExtensions | OtherExtensions | GhcOptions | Mixins
   | OtherComponentField
   deriving (Eq, Ord, Read, Show, Enum, Bounded)
 
