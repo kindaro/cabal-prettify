@@ -51,10 +51,10 @@ checks = testGroup "All checks."
 -- | These examples are structurally unchanged by formatting. They may have
 -- white space issues, but everything that should be sorted is already sorted.
 unchangedExamples ∷ [(FilePath, ByteString)]
-unchangedExamples = $(bind embedDir (makeRelativeToProject "examples/unchanged"))
+unchangedExamples = $(bind embedDir (makeRelativeToProject "test-data/unchanged"))
 
 otherExamples ∷ [(FilePath, ByteString)]
-otherExamples = $(bind embedDir (makeRelativeToProject "examples/other"))
+otherExamples = $(bind embedDir (makeRelativeToProject "test-data/other"))
 
 examples ∷ [(FilePath, ByteString)]
 examples = unchangedExamples ++ otherExamples
