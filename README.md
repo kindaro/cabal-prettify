@@ -1,5 +1,7 @@
 # `cabal-prettify`: Prettify your Cabal package configuration files!
 
+See [`cabal-prettify.cabal`](cabal-prettify.cabal) for an example.
+
 ## Quick start:
 
 * Prettify the configuration file of the package you are in right now:
