@@ -12,25 +12,30 @@ common commons
     , base-unicode-symbols
     , bytestring
     , Cabal
+    , directory
     , filepath
+    , mtl
     , optparse-applicative
     , parsec
     , pretty
+    , transformers
     , utf8-string
   default-language: Haskell2010
   default-extensions:
     ApplicativeDo
     BlockArguments
+    DuplicateRecordFields
     FlexibleContexts
     FlexibleInstances
     ImportQualifiedPost
     InstanceSigs
     OverloadedStrings
+    RecordWildCards
     StandaloneDeriving
     TypeApplications
     TypeOperators
     UnicodeSyntax
-  ghc-options: -Wall -Wextra -Werror
+  ghc-options: -Wall -Wextra -Werror -Wno-name-shadowing
 
 library
   import: commons

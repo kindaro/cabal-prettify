@@ -2,4 +2,5 @@
 - ignore: {name: "Use $>"}
 - ignore: {name: "Use section"}
 - ignore: {name: "Use lambda-case"}
+- ignore: {name: "Use newtype instead of data"}
 - warn: {name: Redundant bracket due to operator fixities}
