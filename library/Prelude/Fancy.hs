@@ -3,6 +3,7 @@ module Prelude.Fancy where
 import Prelude.Unicode
 import Control.Applicative
 import Control.Monad.Writer
+import qualified Data.ByteString
 
 bind ∷ Monad monad ⇒ (input → monad output) → monad input → monad output
 bind = (=<<)
@@ -50,3 +51,8 @@ for = flip fmap
 
 say ∷ (Applicative applicative, MonadWriter (applicative α) monad) ⇒ α → monad ( )
 say = tell ∘ pure
+
+type ByteArray = Data.ByteString.ByteString
+
+forgetLeft ∷ Either anything value → Maybe value
+forgetLeft = either (const Nothing) Just

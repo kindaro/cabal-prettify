@@ -18,6 +18,8 @@ import Data.Maybe
 import System.Exit
 import Control.Monad.Trans.Writer
 import System.Directory
+import Control.Monad
+import System.IO.Error
 
 import Distribution.Prettify
 
@@ -60,20 +62,22 @@ parseTargets = do
 
 data Settings = Settings
   { check ∷ Bool
+  , move ∷ Bool
   } deriving (Eq, Ord, Show, Read)
 
 parseSettings ∷ Parser Settings
 parseSettings = do
   check ← switch (long "check" <> help "Only check, exit with status 1 when targets need formatting.")
+  move ← switch (long "move" <> help "Move source files to tidily named directories.")
   pure Settings {..}
 
 data Action = Action
   { target ∷ Maybe FilePath
-  , check ∷ Bool
+  , settings ∷ Settings
   } deriving (Eq, Ord, Show, Read)
 
 processTargetsWithSettings ∷ Targets -> Settings -> IO [Action]
-processTargetsWithSettings Targets {..} Settings {..} = (fmap catMaybes ∘ sequence ∘ fmap sequence ∘ execWriter) do
+processTargetsWithSettings Targets {..} settings = (fmap catMaybes ∘ sequence ∘ fmap sequence ∘ execWriter) do
   say do
     whence thisPackage do
       pathToCabalFile ← Cabal.defaultPackageDesc Cabal.normal
@@ -82,21 +86,37 @@ processTargetsWithSettings Targets {..} Settings {..} = (fmap catMaybes ∘ sequ
   tell do for arguments \ pathToCabalFile → Just (pure Action {target = Just pathToCabalFile, ..})
 
 runAction ∷ Action → IO Bool
-runAction Action {..} = do
+runAction Action {settings = Settings {..}, ..} = do
   contents ← bind ByteArray.hGetContents case target of
     Nothing → pure stdin
     Just filePath → openFile filePath ReadMode
+  let
+    format = if move then formatWithMoving else fmap (, [ ]) ∘ formatWithoutMoving
   case format contents of
     Left error → throwIO error
-    Right result → if result ≡ contents
+    Right (result, moves) → if result ≡ contents
       then pure True
       else if check
         then pure False
-        else case target of
-          Nothing → do
-            ByteArray.hPut stdout result
-            pure True
-          Just filePath → do
-            renameFile filePath (filePath <.> "previous")
-            ByteArray.writeFile filePath result
-            pure True
+        else do
+          case target of
+            Nothing → ByteArray.hPut stdout result
+            Just target → runEffects target result moves
+          pure True
+
+runEffects :: FilePath → ByteArray → [(FilePath, FilePath)] → IO ( )
+runEffects target result moves = do
+  renameFile target (target <.> "previous")
+  ByteArray.writeFile target result
+  forM_ moves \ (sourceSubdirectory, targetSubdirectory) → let
+      sourceDirectory = (dropFileName target </> sourceSubdirectory)
+      targetDirectory = (dropFileName target </> targetSubdirectory)
+    in do
+    resultOfRenaming ← try @IOError do renameDirectory targetDirectory (targetDirectory <.> "previous")
+    case resultOfRenaming of
+      Right ( ) → pure ( )
+      Left ioError | isDoesNotExistError ioError → pure ( )
+      Left otherError → throwIO otherError
+    createDirectoryIfMissing True targetDirectory
+    removeDirectory targetDirectory
+    renameDirectory sourceDirectory targetDirectory

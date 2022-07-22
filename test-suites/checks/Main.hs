@@ -41,11 +41,20 @@ checks = testGroup "All checks."
       , testProperty "Long input is tabulated" (sortWhiteSpaceSeparated  "a b c d e f" === "a\nb\nc\nd\ne\nf")
       ]
     ]
-  , testGroup "Parse."
-    [ testGroup "Formatting works." (fmap (uncurry checkFormattingWorks) examples)
-    , testGroup "Formatting is idempotent." (fmap (uncurry checkFormattingIsIdempotent) examples)
-    , testGroup "Package data is unchanged." (fmap (uncurry checkPackageDataIsUnchanged) unchangedExamples)
-    ]
+  , testGroup "Parse." do
+      (concat ∘ for [formatWithoutMoving, fmap fst ∘ formatWithMoving]) \ format →
+        [ testGroup "Formatting works." do
+            for examples \ (name, contents) →
+              testProperty name (isRight (format contents))
+        , testGroup "Formatting is idempotent." do
+            for examples \ (name, contents) →
+              testProperty name ((bind format ∘ pure) contents === (bind format ∘ bind format ∘ pure) contents)
+        ]
+  , testGroup "Package data is unchanged." do
+        for unchangedExamples \ (name, contents) → let
+          expected = parseGenericPackageDescriptionMaybe contents
+          actual = (bind parseGenericPackageDescriptionMaybe ∘ either (const Nothing) Just ∘ formatWithoutMoving) contents
+          in testProperty name (expected === actual)
   ]
 
 -- | These examples are structurally unchanged by formatting. They may have
@@ -58,17 +67,3 @@ otherExamples = $(bind embedDir (makeRelativeToProject "test-data/other"))
 
 examples ∷ [(FilePath, ByteString)]
 examples = unchangedExamples ++ otherExamples
-
-checkFormattingWorks ∷ TestName → ByteString → TestTree
-checkFormattingWorks name contents = testProperty name (isRight (Distribution.Prettify.format contents))
-
-checkFormattingIsIdempotent ∷ TestName → ByteString → TestTree
-checkFormattingIsIdempotent name contents
-  = testProperty name ((bind format ∘ pure) contents === (bind format ∘ bind format ∘ pure) contents)
-
-checkPackageDataIsUnchanged ∷ TestName → ByteString → TestTree
-checkPackageDataIsUnchanged name contents =
-  let
-    expected = parseGenericPackageDescriptionMaybe contents
-    actual = (bind parseGenericPackageDescriptionMaybe ∘ either (const Nothing) Just ∘ format) contents
-  in testProperty name (expected === actual)

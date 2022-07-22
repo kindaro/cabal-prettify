@@ -33,6 +33,7 @@ common commons
     OverloadedStrings
     RecordWildCards
     StandaloneDeriving
+    TupleSections
     TypeApplications
     TypeOperators
     UnicodeSyntax
