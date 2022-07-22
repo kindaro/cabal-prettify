@@ -1,0 +1,11 @@
+name: cabal-prettify --check --this
+on:
+  - push
+  - pull_request
+jobs:
+  check:
+    name: cabal-prettify --check --this
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout
+      - run: cabal-prettify --check --this
