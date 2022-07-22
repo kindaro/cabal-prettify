@@ -130,7 +130,7 @@ show ∷ [PrettyField anything] → ByteString
 show = (<> "\n") ∘ ByteString.intercalate "\n" ∘ fmap Utf8.fromString ∘ fix \ recurse → flattenBlocks ∘ fmap \ prettyField → case prettyField of
   PrettyField _ fieldName contentsOfField →
     let
-      fieldNameString = Utf8.toString fieldName
+      fieldNameString = (fmap toLower . Utf8.toString) fieldName
       renderedContentsOfField = (lines ∘ PrettyPrint.render) contentsOfField
       margin = case drop 1 renderedContentsOfField of
         [ ] → NoMargin
