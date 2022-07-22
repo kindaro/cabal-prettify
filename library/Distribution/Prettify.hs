@@ -76,6 +76,8 @@ sort = sortFurther ∘ sortTopLevel
         in case (identifyEnumerable @ComponentField ∘ fieldNameOfName) name of
             HsSourceDirs → repackage sortWhiteSpaceSeparated arguments
             ExposedModules → repackage sortWhiteSpaceSeparated arguments
+            ReexportedModules → repackage sortWhiteSpaceSeparated arguments
+            OtherModules → repackage sortWhiteSpaceSeparated arguments
             BuildDepends → repackage sortCommaSeparated arguments
             DefaultExtensions → repackage sortWhiteSpaceSeparated arguments
             OtherExtensions → repackage sortWhiteSpaceSeparated arguments
@@ -200,7 +202,7 @@ data TopLevelField
   deriving (Eq, Ord, Read, Show, Enum, Bounded)
 
 data ComponentField
-  = Import | Type | HsSourceDirs | MainIs | ExposedModules | BuildDepends
+  = Import | Type | HsSourceDirs | MainIs | ExposedModules | ReexportedModules | OtherModules | BuildDepends
   | DefaultLanguage | DefaultExtensions | OtherExtensions | GhcOptions | Mixins
   | OtherComponentField
   deriving (Eq, Ord, Read, Show, Enum, Bounded)
