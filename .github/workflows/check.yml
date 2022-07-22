@@ -1,18 +1,15 @@
 name: cabal-prettify --check --this
 on:
-  - push
-  - pull_request
+  workflow_run:
+    workflows:
+      - Haskell-CI
+    types:
+      - completed
 jobs:
   check:
     name: cabal-prettify --check --this
     runs-on: ubuntu-18.04
     steps:
-      - uses: lewagon/wait-on-check-action@v1.0.0
-        with:
-          ref: ${{ github.ref }}
-          check-name: 'Haskell-CI'
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          wait-interval: 10
       - uses: actions/checkout@v2
       - uses: actions/cache@v2
         with:
