@@ -7,6 +7,16 @@ jobs:
     name: cabal-prettify --check --this
     runs-on: ubuntu-18.04
     steps:
+      - uses: lewagon/wait-on-check-action@v1.0.0
+        with:
+          ref: ${{ github.ref }}
+          check-name: 'Haskell-CI'
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          wait-interval: 10
       - uses: actions/checkout@v2
-      - run: cabal-prettify --check --this
+      - uses: actions/cache@v2
+        with:
+          path: ~/.cabal/store
+          restore-keys: ${{ runner.os }}-
+      - run: cabal run cabal-prettify -- --check --this
       - run: false
