@@ -1,6 +1,9 @@
 - ignore: {name: "Use <$>"}
+- ignore: {name: "Use <$"}
 - ignore: {name: "Use $>"}
 - ignore: {name: "Use section"}
 - ignore: {name: "Use lambda-case"}
 - ignore: {name: "Use newtype instead of data"}
+- ignore: {name: "Monoid law, left identity"}
+- ignore: {name: "Monoid law, right identity"}
 - warn: {name: Redundant bracket due to operator fixities}

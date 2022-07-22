@@ -19,12 +19,23 @@ import Distribution.Fields.Pretty
 import Text.Parsec hiding (string)
 import Text.Parsec qualified as Parsec
 import Text.PrettyPrint qualified as PrettyPrint
+import System.FilePath ((</>))
+import Prelude.Fancy
+import Data.Bifunctor
 
 fieldNameOfName ∷ Name anything → ByteString
 fieldNameOfName (Distribution.Fields.Parser.Name _ fieldName) = fieldName
 
 byteStringOfFieldLine ∷ FieldLine anything → ByteString
 byteStringOfFieldLine (FieldLine _ byteString) = byteString
+
+byteStringOfSectionArg ∷ SectionArg anything → ByteString
+byteStringOfSectionArg (SecArgName _ byteString) = byteString
+byteStringOfSectionArg (SecArgStr _ byteString) = byteString
+byteStringOfSectionArg (SecArgOther _ byteString) = byteString
+
+annotationOfFieldLine ∷ FieldLine annotation → annotation
+annotationOfFieldLine (FieldLine annotation _) = annotation
 
 mapFieldLine ∷ (ByteString → ByteString) → FieldLine anything → FieldLine anything
 mapFieldLine function (FieldLine annotation byteString) = FieldLine annotation (function byteString)
@@ -33,8 +44,15 @@ conflateFieldLines ∷ [FieldLine anything] → Maybe (FieldLine anything)
 conflateFieldLines [ ] = Nothing
 conflateFieldLines ((FieldLine annotation byteString): remainingFieldLines) = (Just ∘ FieldLine annotation) ((ByteString.intercalate " " ∘ (byteString:) ∘ fmap byteStringOfFieldLine) remainingFieldLines)
 
-format ∷ ByteString → Either ParseError ByteString
-format = fmap (show ∘ fromParsecFields ∘ sort) ∘ readFields
+formatWithoutMoving ∷ ByteString → Either ParseError ByteString
+formatWithoutMoving = fmap (show ∘ fromParsecFields ∘ sort) ∘ readFields
+
+formatWithMoving ∷ ByteString → Either ParseError (ByteString, [(FilePath, FilePath)])
+formatWithMoving = fmap (first (show ∘ fromParsecFields) ∘ renameSourceDirectories ∘ sort) ∘ readFields
+
+pluralizeStanzaName ∷ ByteArray → ByteArray
+pluralizeStanzaName "library" = "libraries"
+pluralizeStanzaName name = name <> "s"
 
 sort ∷ [Field anything] → [Field anything]
 sort = sortFurther ∘ sortTopLevel
@@ -65,6 +83,31 @@ sort = sortFurther ∘ sortTopLevel
             Mixins → repackage sortCommaSeparated arguments
             _ → singleField
       Section name arguments fields → Section name arguments (recurse fields)
+
+filePathOfByteArray ∷ ByteString → FilePath
+filePathOfByteArray = Utf8.toString
+
+byteArrayOfFilePath ∷ FilePath → ByteString
+byteArrayOfFilePath = Utf8.fromString
+
+renameSourceDirectories ∷ [Field anything] → ([Field anything], [(FilePath, FilePath)])
+renameSourceDirectories = fmap catMaybes ∘ unzip ∘ fmap \ topLevelField → case topLevelField of
+  (Section nameOfSection argumentsOfSection fields) → case List.break ((≡ Left HsSourceDirs) ∘ identifyInnerEntry) fields of
+    (prefix, Field nameOfField [argumentOfField]: postfix) → let
+        oldPathBytes = byteStringOfFieldLine argumentOfField
+        maybeArgumentOfSection = (fmap byteStringOfSectionArg ∘ listToMaybe) argumentsOfSection
+        newPath = case maybeArgumentOfSection of
+          Nothing → (filePathOfByteArray ∘ fieldNameOfName) nameOfSection
+          Just argumentOfSection → filePathOfByteArray ((pluralizeStanzaName ∘ fieldNameOfName) nameOfSection)
+            </> filePathOfByteArray argumentOfSection
+      in if newPath ≡ filePathOfByteArray oldPathBytes
+          then (topLevelField, Nothing)
+          else let
+              newInnerField = Field nameOfField [FieldLine (annotationOfFieldLine argumentOfField) (byteArrayOfFilePath newPath)]
+              newSection = Section nameOfSection argumentsOfSection (prefix ++ newInnerField: postfix)
+            in (newSection, Just (filePathOfByteArray oldPathBytes, newPath))
+    _ → (topLevelField, Nothing)
+  _ → (topLevelField, Nothing)
 
 identifyTopLevelEntry ∷ Field anything → Either TopLevelField Component
 identifyTopLevelEntry (Field name _) = (Left ∘ identifyEnumerable ∘ fieldNameOfName) name
