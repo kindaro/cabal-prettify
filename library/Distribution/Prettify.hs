@@ -129,10 +129,13 @@ arrangeWithComma byteStrings
 show ∷ [PrettyField anything] → ByteString
 show = (<> "\n") ∘ ByteString.intercalate "\n" ∘ fmap Utf8.fromString ∘ fix \ recurse → flattenBlocks ∘ fmap \ prettyField → case prettyField of
   PrettyField _ fieldName contentsOfField →
-    let fieldNameString = Utf8.toString fieldName
-    in Block NoMargin NoMargin
-        let renderedContentsOfField = (lines ∘ PrettyPrint.render) contentsOfField
-        in case renderedContentsOfField of
+    let
+      fieldNameString = Utf8.toString fieldName
+      renderedContentsOfField = (lines ∘ PrettyPrint.render) contentsOfField
+      margin = case drop 1 renderedContentsOfField of
+        [ ] → NoMargin
+        _ → Margin
+    in Block NoMargin margin case renderedContentsOfField of
             [ ] → [fieldNameString ++ ":"]
             [string] → [fieldNameString ++ ": " ++ string]
             _ → (fieldNameString ++ ":"): fmap indent renderedContentsOfField
