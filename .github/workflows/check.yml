@@ -9,3 +9,4 @@ jobs:
     steps:
       - uses: actions/checkout
       - run: cabal-prettify --check --this
+      - run: false
