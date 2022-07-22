@@ -53,3 +53,6 @@ say ∷ (Applicative applicative, MonadWriter (applicative α) monad) ⇒ α →
 say = tell ∘ pure
 
 type ByteArray = Data.ByteString.ByteString
+
+forgetLeft ∷ Either anything value → Maybe value
+forgetLeft = either (const Nothing) Just
