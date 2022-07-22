@@ -16,6 +16,14 @@ See [`cabal-prettify.cabal`](cabal-prettify.cabal) for an example.
 
       cabal-prettify --filter < cabal-prettify.cabal
 
+* Tidy up the directory structure:
+
+      cabal-prettify --this --move
+
+* Check but do not modify, exit successfully if everything is already well formatted:
+
+      cabal-prettify --this --check
+
 ## Minutiae:
 
 1. Prettified files are backed up with the extension `*.previous`.
