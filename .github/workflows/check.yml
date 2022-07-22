@@ -7,6 +7,6 @@ jobs:
     name: cabal-prettify --check --this
     runs-on: ubuntu-18.04
     steps:
-      - uses: actions/checkout
+      - uses: actions/checkout@v2
       - run: cabal-prettify --check --this
       - run: false
