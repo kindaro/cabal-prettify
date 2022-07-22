@@ -53,7 +53,7 @@ checks = testGroup "All checks."
   , testGroup "Package data is unchanged." do
         for unchangedExamples \ (name, contents) → let
           expected = parseGenericPackageDescriptionMaybe contents
-          actual = (bind parseGenericPackageDescriptionMaybe ∘ either (const Nothing) Just ∘ formatWithoutMoving) contents
+          actual = (bind parseGenericPackageDescriptionMaybe ∘ forgetLeft ∘ formatWithoutMoving) contents
           in testProperty name (expected === actual)
   ]
 
