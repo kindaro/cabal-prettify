@@ -1,6 +1,8 @@
 module Prelude.Fancy where
 
 import Prelude.Unicode
+import Control.Applicative
+import Control.Monad.Writer
 
 bind ∷ Monad monad ⇒ (input → monad output) → monad input → monad output
 bind = (=<<)
@@ -35,3 +37,16 @@ instance Commutative Either where
 distribute ∷ Bool × α → α + α
 distribute (False, value) = Left value
 distribute (True, value) = Right value
+
+constant ∷ α → β → α
+constant = const
+
+whence ∷ Alternative alternative ⇒ Bool → α → alternative α
+whence True = pure
+whence False = constant empty
+
+for ∷ Functor functor ⇒ functor α → (α → β) → functor β
+for = flip fmap
+
+say ∷ (Applicative applicative, MonadWriter (applicative α) monad) ⇒ α → monad ( )
+say = tell ∘ pure
