@@ -4,24 +4,22 @@ import Prelude hiding (read, show)
 import Prelude qualified
 import Prelude.Unicode
 
-import Control.Applicative (liftA2)
-import Control.Monad
 import Data.ByteString (ByteString)
 import Data.ByteString qualified as ByteString
 import Data.ByteString.UTF8 qualified as Utf8
 import Data.Char
-import Data.Either
 import Data.Function
 import Data.List qualified as List
 import Data.Maybe
 import Distribution.Fields.Parser
 import Distribution.Fields.Pretty
 import Text.Parsec hiding (string)
-import Text.Parsec qualified as Parsec
 import Text.PrettyPrint qualified as PrettyPrint
 import System.FilePath ((</>))
 import Prelude.Fancy
 import Data.Bifunctor
+
+import Distribution.Prettify.Parsers
 
 fieldNameOfName ∷ Name anything → ByteString
 fieldNameOfName (Distribution.Fields.Parser.Name _ fieldName) = fieldName
@@ -64,7 +62,7 @@ sort = sortFurther ∘ sortTopLevel
     sortTopLevel = List.sortOn identifyTopLevelEntry ∘ fmap \ prettyField → case prettyField of
       singleField@(Field name arguments) →
         case (identifyEnumerable @TopLevelField ∘ fieldNameOfName) name of
-          TestedWith → repackageWithName name sortCommaSeparated arguments
+          TestedWith → repackageWithName name sortCompilerVersions arguments
           ExtraSourceFiles → repackageWithName name sortWhiteSpaceSeparated arguments
           ExtraDocFiles → repackageWithName name sortWhiteSpaceSeparated arguments
           _ → singleField
@@ -119,47 +117,22 @@ identifyInnerEntry ∷ Field anything → Either ComponentField Component
 identifyInnerEntry (Field name _) = (Left ∘ identifyEnumerable ∘ fieldNameOfName) name
 identifyInnerEntry Section { } = Right OtherComponent
 
-runParserSimply ∷ Parsec ByteString ( ) output → ByteString → Either ParseError output
-runParserSimply parser = runParser parser ( ) ""
-
-parseList ∷ Parsec ByteString ( ) [value] → ByteString → [value]
-parseList = fmap (fromRight [ ]) ∘ runParserSimply
+sortWhiteSpaceSeparated ∷ ByteString → ByteString
+sortWhiteSpaceSeparated = (fmap (arrangeWithWhiteSpace ∘ List.sortOn (fmap toLower ∘ Utf8.toString) ∘ fmap Utf8.fromString) ∘ parseList) parseWhiteSpaceSeparated
 
 sortCommaSeparated ∷ ByteString → ByteString
 sortCommaSeparated = (fmap adjust ∘ parseList) parseCommaSeparated
   where
     adjust = arrangeWithComma ∘ List.sortOn (fmap toLower ∘ Utf8.toString) ∘ fmap (squashWhiteSpace ∘ Utf8.fromString)
 
-    squashWhiteSpace = ByteString.intercalate " " ∘ fmap Utf8.fromString ∘ parseList parseWhiteSpaceSeparated
-
-parseCommaSeparated ∷ Parsec ByteString ( ) [String]
-parseCommaSeparated = do
-  optional (try comma)
-  sepEndBy1 thing comma
+sortCompilerVersions :: ByteString → ByteString
+sortCompilerVersions = (fmap adjust ∘ parseList) parseCommaSeparated
   where
-    thing = many1Till anyChar ((void ∘ try ∘ lookAhead) comma <|> try eof)
-    comma = many parseWhiteSpace *> parseComma *> many parseWhiteSpace
-
-sortWhiteSpaceSeparated ∷ ByteString → ByteString
-sortWhiteSpaceSeparated = (fmap (arrangeWithWhiteSpace ∘ List.sortOn (fmap toLower ∘ Utf8.toString) ∘ fmap Utf8.fromString) ∘ parseList) parseWhiteSpaceSeparated
+    adjust ∷ [String] → ByteString
+    adjust = arrangeWithComma ∘ List.sortOn (runParserSimply parseCompilerVersion) ∘ fmap (squashWhiteSpace ∘ Utf8.fromString)
 
 arrangeWhiteSpaceSeparated ∷ ByteString → ByteString
 arrangeWhiteSpaceSeparated = arrangeWithWhiteSpace ∘ fmap Utf8.fromString ∘ parseList parseWhiteSpaceSeparated
-
-parseWhiteSpaceSeparated ∷ Parsec ByteString ( ) [String]
-parseWhiteSpaceSeparated = do
-  _ ← many parseCommaOrWhiteSpace
-  sepEndBy1 thing (many1 (parseCommaOrWhiteSpace <|> parseComma))
-  where
-    thing = many1Till anyChar ((void ∘ try ∘ lookAhead) (many1 parseCommaOrWhiteSpace) <|> try eof)
-    parseCommaOrWhiteSpace = parseComma <|> parseWhiteSpace
-
-many1Till ∷ Parsec ByteString ( ) value → Parsec ByteString ( ) anything → Parsec ByteString ( ) [value]
-many1Till what untilWhen = liftA2 (:) what (manyTill what untilWhen)
-
-parseComma, parseWhiteSpace ∷ Parsec ByteString ( ) String
-parseComma = Parsec.string ","
-parseWhiteSpace = Parsec.string " " <|> Parsec.string "\n" <|> Parsec.string "\t"
 
 arrangeWithWhiteSpace ∷ [ByteString] → ByteString
 arrangeWithWhiteSpace byteStrings

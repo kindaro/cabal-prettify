@@ -43,7 +43,7 @@ common commons
 library
   import: commons
   hs-source-dirs: library
-  exposed-modules: Distribution.Prettify Prelude.Fancy
+  exposed-modules: Distribution.Prettify Distribution.Prettify.Parsers Prelude.Fancy
 
 executable cabal-prettify
   import: commons
