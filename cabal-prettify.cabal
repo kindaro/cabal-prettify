@@ -1,6 +1,6 @@
 cabal-version: 3.0
 name: cabal-prettify
-version: 0.2.0.8
+version: 0.2.1.0
 author: Ignat Insarov
 maintainer: kindaro@gmail.com
 tested-with: GHC == 8.10.7, GHC == 9.0.1, GHC == 9.2.1
@@ -14,6 +14,7 @@ common commons
     , Cabal
     , directory
     , filepath
+    , generic-deriving
     , mtl
     , optparse-applicative
     , parsec
@@ -25,6 +26,7 @@ common commons
   default-extensions:
     ApplicativeDo
     BlockArguments
+    DeriveGeneric
     DuplicateRecordFields
     FlexibleContexts
     FlexibleInstances

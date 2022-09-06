@@ -18,6 +18,9 @@ import Control.Monad.Trans.Writer
 import System.Directory
 import Control.Monad
 import System.IO.Error
+import GHC.Generics (Generic)
+import Generics.Deriving.Monoid
+import Generics.Deriving.Semigroup
 
 import Distribution.Prettify
 
@@ -46,17 +49,27 @@ run Command {..} = do
   if and outcomes then exitSuccess else exitWith (ExitFailure 1)
 
 data Targets = Targets
-  { thisPackage ∷ Bool
-  , standardInput ∷ Bool
+  { thisPackage ∷ Any
+  , standardInput ∷ Any
   , arguments ∷ [FilePath]
-  } deriving (Eq, Ord, Show, Read)
+  } deriving (Eq, Ord, Show, Read, Generic)
+instance Semigroup Targets where (<>) = gsappenddefault
+instance Monoid Targets where mempty = gmemptydefault
 
-parseTargets ∷ Parser Targets
-parseTargets = do
-  thisPackage ← switch (long "this" <> help "Prettify the configuration file of the package you are in right now.")
-  standardInput ← switch (long "filter" <> help "Prettify standard input.")
-  arguments ← many (argument str (metavar "{cabal files}"))
-  pure Targets {..}
+checkFlag ∷ Mod FlagFields ( ) → Parser ( )
+checkFlag = flag' ( )
+
+parseThisPackage, parseStandardInput, parseArguments, parseTargets ∷ Parser Targets
+parseThisPackage = do
+  checkFlag (long "this" <> help "Prettify the configuration file of the package you are in right now.")
+  pure do mempty {thisPackage = Any True}
+parseStandardInput = do
+  checkFlag (long "filter" <> help "Prettify standard input.")
+  pure do mempty {standardInput = Any True}
+parseArguments = do
+  arguments ← some (argument (str @FilePath) (metavar "{cabal files}"))
+  pure do mempty {arguments = arguments}
+parseTargets = fmap mconcat do some (parseThisPackage <|> parseStandardInput <|> parseArguments)
 
 data Settings = Settings
   { check ∷ Bool
@@ -77,10 +90,10 @@ data Action = Action
 processTargetsWithSettings ∷ Targets -> Settings -> IO [Action]
 processTargetsWithSettings Targets {..} settings = (fmap catMaybes ∘ sequence ∘ fmap sequence ∘ execWriter) do
   say do
-    whence thisPackage do
+    whence (getAny thisPackage) do
       pathToCabalFile ← Cabal.defaultPackageDesc Cabal.normal
       pure Action {target = Just pathToCabalFile, ..}
-  say do whence standardInput (pure Action {target = Nothing, ..})
+  say do whence (getAny standardInput) (pure Action {target = Nothing, ..})
   tell do for arguments \ pathToCabalFile → Just (pure Action {target = Just pathToCabalFile, ..})
 
 runAction ∷ Action → IO Bool
