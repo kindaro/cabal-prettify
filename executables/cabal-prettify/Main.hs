@@ -1,5 +1,3 @@
-{-# options_ghc -Wno-orphans #-}
-
 module Main where
 
 import Prelude

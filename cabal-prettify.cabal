@@ -50,6 +50,7 @@ executable cabal-prettify
   hs-source-dirs: executables/cabal-prettify
   main-is: Main.hs
   build-depends: cabal-prettify
+  ghc-options: -Wno-orphans
 
 test-suite checks
   import: commons
