@@ -117,7 +117,8 @@ runAction Action {settings = Settings {..}, ..} = do
 
 runEffects :: FilePath → ByteArray → [(FilePath, FilePath)] → IO ( )
 runEffects target result moves = do
-  renameFile target (target <.> "previous")
+  let backup = dropFileName target </> "." <> takeFileName target <.> "backup"
+  renameFile target backup
   ByteArray.writeFile target result
   forM_ moves \ (sourceSubdirectory, targetSubdirectory) → let
       sourceDirectory = (dropFileName target </> sourceSubdirectory)
