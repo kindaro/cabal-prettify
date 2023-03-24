@@ -162,6 +162,7 @@ show = (<> "\n") ∘ ByteString.intercalate "\n" ∘ fmap Utf8.fromString ∘ fi
       renderedSectionName = (PrettyPrint.text ∘ Utf8.toString) sectionName
       header = (PrettyPrint.render ∘ PrettyPrint.hsep) (renderedSectionName: arguments)
     in header: (fmap indent ∘ recurse) fields
+  PrettyEmpty → Block NoMargin NoMargin mempty
 
 indent ∷ String → String
 indent "" = ""
