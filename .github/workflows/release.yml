@@ -66,15 +66,11 @@ jobs:
           ghc-version: ${{ matrix.ghc }}
           cabal-version: ${{ matrix.cabal }}
 
-      - name: Freeze
-        run: |
-          cabal freeze
-
       - name: Cache ~/.cabal/store
-        uses: actions/cache@v3.0.5
+        uses: actions/cache@v2
         with:
-          path: ${{ steps.setup-haskell-cabal.outputs.cabal-store }}
-          key: ${{ runner.os }}-${{ matrix.ghc }}-${{ hashFiles('cabal.project.freeze') }}
+          key: ${{ runner.os }}-ghc-${{ matrix.ghc }}-${{ github.sha }}
+          path: ~/.cabal/store
 
       - name: Build binary
         run: |
@@ -89,7 +85,7 @@ jobs:
         run: echo "BINARY_PATH=./dist/cabal-prettify${{ env.EXT }}" >> $GITHUB_ENV
 
       - name: Compress binary
-        uses: svenstaro/upx-action@2.0.1
+        uses: svenstaro/upx-action@v2
         with:
           file: ${{ env.BINARY_PATH }}
 
